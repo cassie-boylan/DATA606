@@ -1,0 +1,144 @@
+---
+title: "Lab 1: Intro to R"
+author: "Cassandra Boylan"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r load-packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(openintro)
+```
+
+```{r}
+data('arbuthnot', package='openintro')
+data('present', package='openintro')
+```
+```{r}
+glimpse(arbuthnot)
+glimpse(present)
+```
+
+### Exercise 1
+
+```{r view-girls-counts}
+arbuthnot$girls
+```
+
+
+### Exercise 2
+
+It appears that the birthrate* of girls trended downward between the years 1640 and 1660.  Nearly 2000 less girls were born in approximately 1660 in comparison to 1640.  From 1660 to 1680,however, the birth count of girls doubled, from 3000 to 6000 in the span of 20 years.  On average, birthrate for girls saw a linear positive increase over the 70 years measured.
+
+*baptisms is serving as the proxy measure of birthrate - since birthrate is our true outcome of interest, am referring to birth rate in analysis
+
+```{r trend-girls}
+ggplot(data = arbuthnot, aes(x = year, y = girls)) + 
+  geom_line() + geom_smooth(method="lm")
+```
+
+```{r}
+arbuthnot$boys + arbuthnot$girls
+```
+
+```{r}
+arbuthnot <- arbuthnot %>%
+  mutate(total = boys + girls)
+```
+
+
+### Exercise 3
+
+It appears the ratio of boys to girls being born is roughly between .51 and .53 over the 70 years measured.  In every year measured, birthrate of boys appears to outnumber the birthrate of girls.  However, there are only 4 years in which ratio of boys ever exceeds .53 - interestingly enough, these years are all within the same decade, and 3 of these years (1659-1661) are consecutive.  The year 1661 represents the ratio of boys to girls born was highest.  In year 1704 the ratio of boys to girls was at its very lowest at .503.  Plotting the ratios across the years, we can see the birth ratio in 1704 appears to be an outlier.
+
+```{r plot-prop-boys-arbuthnot}
+arbuthnot <- arbuthnot %>% 
+  mutate(boy_ratio = round(boys/total,3))
+
+ggplot(arbuthnot, aes(x=year, y=boy_ratio)) +
+  geom_line(color="blue", alpha=.8,size=.8)
+```
+
+```{r}
+sum(arbuthnot$boy_ratio > .50)
+sum(arbuthnot$boy_ratio > .52)
+sum(arbuthnot$boy_ratio > .53)
+filter(arbuthnot, boy_ratio>.53)
+
+arbuthnot[which.max(arbuthnot$boy_ratio),0:5]
+arbuthnot[which.min(arbuthnot$boy_ratio),0:5]
+
+arbuthnot <- arbuthnot %>%
+  mutate(more_boys = boys > girls)
+
+sum(arbuthnot$more_boys ==TRUE)
+```
+
+### Exercise 4
+
+The time frame of measurements made in this dataset is from 1940-2002.    
+There are 63 observations (rows) and 3 variables (columns).    
+The variable names are year, boys, girls.  
+
+```{r dim-present}
+present %>%
+  summarize(min = min(year), max=max(year))
+
+dim(present)
+names(present)
+```
+
+### Exercise 5
+
+If we take a five number summary of the variables boys and girls in each dataset, we can see clearly that the birthrate numbers are clearly on a much different scale.  The counts of US births measure total in the millions to the mere thousands of Arbuthnot counts.
+
+```{r count-compare}
+
+fivenum(arbuthnot$boys)
+fivenum(arbuthnot$girls)
+
+fivenum(present$boys)
+fivenum(present$girls)
+
+```
+
+
+### Exercise 6
+
+In the US birthrate database, we see a less noticeable lift in birth proportion of boys to girls in yearly birthcount records.  For instance, there are no years in which boy birth ratio exceeds .52. However, like in Arbuthnot's measurements, there are no years in which more girls are born than boys.
+An interesting pattern to note is that where proportion of boy births in relation to girls was noticeably greatest occurred in the decade of the 1940s, considered the period of the great baby boom.
+
+```{r plot-prop-boys-present}
+present <- present %>%
+  mutate(total = boys + girls)
+
+present <- present %>%
+  mutate(boy_ratio = boys/total)
+
+ggplot(present, aes(x=year, y=boy_ratio)) +
+  geom_line(color="green", alpha=.8,size=.8)
+```
+```{r}
+sum(present$boy_ratio > .50)
+sum(present$boy_ratio > .51)
+sum(present$boy_ratio > .52)
+filter(present, boy_ratio>.5132)
+
+present[which.max(present$boy_ratio),0:5]
+present[which.min(present$boy_ratio),0:5]
+
+present <- present %>%
+  mutate(more_boys = boys > girls)
+
+sum(present$more_boys ==TRUE)
+```
+
+
+### Exercise 7
+
+1961 represents the year in which the most total number of births was recorded in the US.
+
+```{r find-max-total}
+present %>% arrange(desc(total))
+```
+
